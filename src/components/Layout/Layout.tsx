@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Users, Trophy, BarChart3, Settings, Menu, X, ChevronRight, FileText, Zap } from 'lucide-react';
+import { Users, Trophy, BarChart3, Settings, Menu, X, ChevronRight, FileText, Zap, LogIn, LogOut, Shield } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { LoginModal } from '../Auth/LoginModal';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -19,6 +21,21 @@ const menuItems = [
 
 export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user, logout, isAdmin } = useAuth();
+
+  // Filter menu items based on authentication
+  const getVisibleMenuItems = () => {
+    const publicItems = ['dashboard', 'classificacao', 'tournaments', 'desafio-quinzenal'];
+    
+    if (isAdmin) {
+      return menuItems; // Admin sees all items
+    }
+    
+    return menuItems.filter(item => publicItems.includes(item.id));
+  };
+
+  const visibleMenuItems = getVisibleMenuItems();
 
   return (
     <div className="min-h-screen bg-chess-gradient relative">
@@ -39,8 +56,33 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
               Ranking Xadrez Chapadão do Céu/GO
             </h1>
           </div>
-          <div className="text-sm text-white/70">
-            <span className="text-white/90 font-medium">Versão 1.0 - Celso Braz (PO)</span>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-white/90">
+                  <Shield size={16} />
+                  <span className="font-medium">{user.name}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="flex items-center gap-2 bg-red-500/20 text-red-200 px-3 py-2 rounded-lg hover:bg-red-500/30 transition-colors"
+                >
+                  <LogOut size={16} />
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLoginModal(true)}
+                className="flex items-center gap-2 bg-blue-500/20 text-blue-200 px-3 py-2 rounded-lg hover:bg-blue-500/30 transition-colors"
+              >
+                <LogIn size={16} />
+                Login Admin
+              </button>
+            )}
+            <div className="text-sm text-white/70">
+              <span className="text-white/90 font-medium">Versão 1.0 - Celso Braz (PO)</span>
+            </div>
           </div>
         </div>
       </header>
@@ -53,7 +95,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
         `}>
           <div className="flex flex-col h-full pt-16 lg:pt-0">
             <nav className="flex-1 px-4 py-6 space-y-2">
-              {menuItems.map((item) => {
+              {visibleMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = currentPage === item.id;
                 
@@ -99,6 +141,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageCha
           </div>
         </main>
       </div>
+      
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   );
 };

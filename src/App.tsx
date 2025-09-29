@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout/Layout';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { Players } from './components/Players/Players';
@@ -33,9 +34,11 @@ function App() {
   };
 
   return (
-    <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
-      {renderCurrentPage()}
-    </Layout>
+    <AuthProvider>
+      <Layout currentPage={currentPage} onPageChange={setCurrentPage}>
+        {renderCurrentPage()}
+      </Layout>
+    </AuthProvider>
   );
 }
 

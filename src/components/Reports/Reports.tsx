@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { FileText, Download, TrendingUp, Users, Trophy, Calendar, BarChart } from 'lucide-react';
 import { useData } from '../../hooks/useData';
 
 export const Reports: React.FC = () => {
+  const { isAdmin } = useAuth();
   const { players, tournaments, exportRankingCSV, exportTournamentStandingsCSV } = useData();
   const [selectedTournament, setSelectedTournament] = useState<string>('');
   const [ageFilter, setAgeFilter] = useState<string>('all');
@@ -44,6 +46,23 @@ export const Reports: React.FC = () => {
   }));
 
   const totalPlayers = filteredPlayers.length;
+
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-400 mb-4">
+          <FileText size={48} className="mx-auto" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Acesso Restrito
+        </h3>
+        <p className="text-gray-600">
+          Esta seção é restrita a administradores. Faça login para acessar.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

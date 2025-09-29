@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Settings as SettingsIcon, Save, Users, Trophy, Shield, BarChart } from 'lucide-react';
 import { useData } from '../../hooks/useData';
 import { VPTableEntry, TournamentSettings } from '../../types';
 
 export const Settings: React.FC = () => {
+  const { isAdmin } = useAuth();
   const { systemSettings } = useData();
   const [activeTab, setActiveTab] = useState<'rating' | 'tournaments' | 'permissions'>('rating');
   const [vpTable, setVpTable] = useState<VPTableEntry[]>(systemSettings.ratingSystem.vpTable);
@@ -37,6 +39,23 @@ export const Settings: React.FC = () => {
     // In a real app, this would save to backend
     alert('Configurações salvas com sucesso!');
   };
+
+  // Redirect non-admin users
+  if (!isAdmin) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-gray-400 mb-4">
+          <SettingsIcon size={48} className="mx-auto" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Acesso Restrito
+        </h3>
+        <p className="text-gray-600">
+          Esta seção é restrita a administradores. Faça login para acessar.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

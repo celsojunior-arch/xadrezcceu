@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Plus, Search, Eye, CreditCard as Edit2, Calendar, Users, Trophy } from 'lucide-react';
 import { useData } from '../../hooks/useData';
 import { Tournament } from '../../types';
@@ -14,6 +15,7 @@ export const TournamentList: React.FC<TournamentListProps> = ({
   onEditTournament, 
   onViewTournament 
 }) => {
+  const { isAdmin } = useAuth();
   const { tournaments, players } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'active' | 'completed'>('all');
@@ -61,13 +63,15 @@ export const TournamentList: React.FC<TournamentListProps> = ({
           <h2 className="text-3xl font-bold text-white text-shadow-lg">Torneios</h2>
           <p className="text-white/90 mt-1 font-medium">{tournaments.length} torneios no sistema</p>
         </div>
-        <button
-          onClick={onCreateTournament}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Novo Torneio
-        </button>
+        {isAdmin && (
+          <button
+            onClick={onCreateTournament}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={20} />
+            Novo Torneio
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -119,12 +123,14 @@ export const TournamentList: React.FC<TournamentListProps> = ({
                 >
                   <Eye size={16} />
                 </button>
-                <button
-                  onClick={() => onEditTournament(tournament)}
-                  className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                >
-                  <Edit2 size={16} />
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => onEditTournament(tournament)}
+                    className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -187,7 +193,7 @@ export const TournamentList: React.FC<TournamentListProps> = ({
               : 'Comece criando o primeiro torneio'
             }
           </p>
-          {!searchTerm && statusFilter === 'all' && (
+          {!searchTerm && statusFilter === 'all' && isAdmin && (
             <button
               onClick={onCreateTournament}
               className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
