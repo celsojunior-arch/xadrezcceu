@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, CreditCard as Edit2, Calendar, Users, Trophy, Target, UserCheck, Lock, Unlock, Download } from 'lucide-react';
 import { Tournament } from '../../types';
 import { useData } from '../../hooks/useData';
@@ -11,6 +12,7 @@ interface TournamentDetailProps {
 }
 
 export const TournamentDetail: React.FC<TournamentDetailProps> = ({ tournament, onBack, onEdit }) => {
+  const { isAdmin } = useAuth();
   const { players, getTournamentStandings, updateTournament, exportTournamentStandingsCSV } = useData();
   const [activeTab, setActiveTab] = React.useState<'overview' | 'rounds' | 'standings'>('overview');
   const [refreshKey, setRefreshKey] = React.useState(0);
@@ -81,13 +83,15 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({ tournament, 
             </p>
           </div>
         </div>
-        <button
-          onClick={onEdit}
-          className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-        >
-          <Edit2 size={20} />
-          Editar
-        </button>
+        {isAdmin && (
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            <Edit2 size={20} />
+            Editar
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -219,17 +223,19 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({ tournament, 
                   <UserCheck size={20} />
                   Seleção de Presentes
                 </h3>
-                <button
-                  onClick={handleToggleLock}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    tournament.participantsLocked
-                      ? 'bg-red-50 text-red-700 hover:bg-red-100'
-                      : 'bg-green-50 text-green-700 hover:bg-green-100'
-                  }`}
-                >
-                  {tournament.participantsLocked ? <Lock size={16} /> : <Unlock size={16} />}
-                  {tournament.participantsLocked ? 'Lista Bloqueada' : 'Lista Aberta'}
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={handleToggleLock}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      tournament.participantsLocked
+                        ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                        : 'bg-green-50 text-green-700 hover:bg-green-100'
+                    }`}
+                  >
+                    {tournament.participantsLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                    {tournament.participantsLocked ? 'Lista Bloqueada' : 'Lista Aberta'}
+                  </button>
+                )}
               </div>
               {tournament.participantsLocked && (
                 <p className="text-sm text-red-600 mt-2">
@@ -253,7 +259,7 @@ export const TournamentDetail: React.FC<TournamentDetailProps> = ({ tournament, 
                       type="checkbox"
                       checked={tournament.presentPlayers.includes(player!.id)}
                       onChange={() => handleTogglePresent(player!.id)}
-                      disabled={tournament.participantsLocked}
+                      disabled={tournament.participantsLocked || !isAdmin}
                       className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                     />
                     <div className="flex-1">

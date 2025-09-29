@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Play, Users, Clock, CheckCircle, AlertCircle, CreditCard as Edit3 } from 'lucide-react';
 import { Tournament, Round, Pairing } from '../../types';
 import { useData } from '../../hooks/useData';
@@ -9,6 +10,7 @@ interface TournamentRoundsProps {
 }
 
 export const TournamentRounds: React.FC<TournamentRoundsProps> = ({ tournament, onTournamentUpdate }) => {
+  const { isAdmin } = useAuth();
   const { players, generateFirstRound, generateSubsequentRound, updatePairingResult, addUndoAction, undoLastAction, undoHistory, loading } = useData();
   const [selectedResult, setSelectedResult] = useState<{ pairingId: string; result: 'white' | 'black' | 'draw' } | null>(null);
   const [showUndoPanel, setShowUndoPanel] = useState(false);
@@ -102,7 +104,7 @@ export const TournamentRounds: React.FC<TournamentRoundsProps> = ({ tournament, 
           Rodadas ({tournament.rounds.length}/{tournament.numberOfRounds})
         </h3>
         <div className="flex items-center gap-4">
-          {undoHistory.filter(a => a.canUndo).length > 0 && (
+          {isAdmin && undoHistory.filter(a => a.canUndo).length > 0 && (
             <button
               onClick={() => setShowUndoPanel(!showUndoPanel)}
               className="flex items-center gap-2 text-sm bg-yellow-50 text-yellow-700 px-3 py-2 rounded-lg hover:bg-yellow-100"
@@ -142,7 +144,7 @@ export const TournamentRounds: React.FC<TournamentRoundsProps> = ({ tournament, 
         </div>
       )}
       {/* Generate Next Round Button */}
-      {tournament.rounds.length < tournament.numberOfRounds && (
+      {isAdmin && tournament.rounds.length < tournament.numberOfRounds && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -272,7 +274,7 @@ export const TournamentRounds: React.FC<TournamentRoundsProps> = ({ tournament, 
                         )}
                       </div>
 
-                      {!pairing.result && (
+                      {!pairing.result && isAdmin && (
                         <div className="mt-3 flex gap-2">
                           <div className="flex gap-1">
                           <button

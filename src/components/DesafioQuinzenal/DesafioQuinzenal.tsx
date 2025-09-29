@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { Calendar, Trophy, Users, Clock, CheckCircle, AlertCircle, Play, Target, Search, FileText } from 'lucide-react';
 import { useData } from '../../hooks/useData';
 
 export const DesafioQuinzenal: React.FC = () => {
+  const { isAdmin } = useAuth();
   const { 
     players, 
     desafioCiclos, 
@@ -109,7 +111,7 @@ export const DesafioQuinzenal: React.FC = () => {
           <h2 className="text-3xl font-bold text-white text-shadow-lg">Desafio Quinzenal</h2>
           <p className="text-white/90 mt-1 font-medium">Sistema automático de confrontos por ranking</p>
         </div>
-        {!cicloAtivo && (
+        {!cicloAtivo && isAdmin && (
           <button
             onClick={handleCriarCiclo}
             disabled={loading}
@@ -268,14 +270,16 @@ export const DesafioQuinzenal: React.FC = () => {
                               <div className="text-lg font-bold text-green-600">
                                 {confronto.resultado}
                               </div>
-                              <button
-                                onClick={() => setEditingConfronto(confronto.id)}
-                                className="text-sm bg-yellow-50 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-100"
-                              >
-                                Editar
-                              </button>
+                              {isAdmin && (
+                                <button
+                                  onClick={() => setEditingConfronto(confronto.id)}
+                                  className="text-sm bg-yellow-50 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-100"
+                                >
+                                  Editar
+                                </button>
+                              )}
                             </div>
-                          ) : (
+                          ) : isAdmin ? (
                             <div className="flex gap-1">
                               <button
                                 onClick={() => handleLancarResultado(confronto.id, '1-0')}
@@ -298,6 +302,10 @@ export const DesafioQuinzenal: React.FC = () => {
                               >
                                 0-1
                               </button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-600 font-medium">
+                              Aguardando resultado
                             </div>
                           )}
                         </div>
@@ -363,14 +371,16 @@ export const DesafioQuinzenal: React.FC = () => {
               <p className="font-bold text-black mb-6">
                 Ciclos são criados automaticamente nos dias 1 e 16 de cada mês às 09:00
               </p>
-              <button
-                onClick={handleCriarCiclo}
-                disabled={loading}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                <Play size={20} />
-                {loading ? 'Criando...' : 'Criar Ciclo Manualmente'}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={handleCriarCiclo}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  <Play size={20} />
+                  {loading ? 'Criando...' : 'Criar Ciclo Manualmente'}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -453,12 +463,14 @@ export const DesafioQuinzenal: React.FC = () => {
                         <div className="text-lg font-bold text-green-600">
                           {confronto.resultado}
                         </div>
-                        <button
-                          onClick={() => setEditingConfronto(confronto.id)}
-                          className="text-sm bg-yellow-50 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-100"
-                        >
-                          Editar
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => setEditingConfronto(confronto.id)}
+                            className="text-sm bg-yellow-50 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-100"
+                          >
+                            Editar
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
