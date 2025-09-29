@@ -64,6 +64,14 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
     return age;
   };
 
+  const getCategory = (birthDate: string) => {
+    const age = getAge(birthDate);
+    if (age >= 18) return 'Absoluto';
+    if (age >= 15) return 'Sub-18';
+    if (age >= 12) return 'Sub-15';
+    return 'Sub-12';
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -134,6 +142,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
             <thead className="bg-blue-100/50">
               <tr>
                 <th className="text-left py-4 px-6 font-bold text-black">Nome</th>
+                <th className="text-left py-4 px-6 font-bold text-black">Categoria</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Idade</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Rating</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Clube</th>
