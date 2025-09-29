@@ -169,6 +169,17 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                       </div>
                     </td>
                     <td className="py-4 px-6">
+                      <div className={`
+                        inline-flex px-3 py-1 rounded-full text-sm font-bold
+                        ${getCategory(player.birthDate) === 'Absoluto' ? 'bg-purple-100 text-purple-800' :
+                          getCategory(player.birthDate) === 'Sub-18' ? 'bg-blue-100 text-blue-800' :
+                          getCategory(player.birthDate) === 'Sub-15' ? 'bg-green-100 text-green-800' :
+                          'bg-orange-100 text-orange-800'}
+                      `}>
+                        {getCategory(player.birthDate)}
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
                       <div className="font-bold text-black">{getAge(player.birthDate)} anos</div>
                     </td>
                     <td className="py-4 px-6">
