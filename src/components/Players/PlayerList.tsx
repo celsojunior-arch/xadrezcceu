@@ -11,7 +11,7 @@ interface PlayerListProps {
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreatePlayer, onEditPlayer, onImportPlayers }) => {
-  const { players, deletePlayer, loading } = useData();
+  const { players, deletePlayer, updatePlayer, loading } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'rating-asc' | 'rating-desc' | 'age-asc' | 'age-desc'>('name-asc');
 
