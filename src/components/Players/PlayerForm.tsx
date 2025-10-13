@@ -17,7 +17,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onClose, onSave 
     nickname: '',
     email: '',
     phone: '',
-    club: '',
+    isActive: true,
     observations: '',
     initialRating: 1500
   });
@@ -32,7 +32,7 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onClose, onSave 
         nickname: player.nickname || '',
         email: player.email || '',
         phone: player.phone || '',
-        club: player.club || '',
+        isActive: player.isActive,
         observations: player.observations || '',
         initialRating: player.currentRating
       });
@@ -248,19 +248,20 @@ export const PlayerForm: React.FC<PlayerFormProps> = ({ player, onClose, onSave 
                 />
               </div>
 
-              {/* Club */}
+              {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Building size={16} className="inline mr-1" />
-                  Clube
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.isActive}
+                    onChange={(e) => handleChange('isActive', e.target.checked)}
+                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Jogador ativo</span>
                 </label>
-                <input
-                  type="text"
-                  value={formData.club}
-                  onChange={(e) => handleChange('club', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Nome do clube"
-                />
+                <p className="text-xs text-gray-500 ml-6 mt-1">
+                  Jogadores inativos não aparecem na classificação nem nos confrontos quinzenais
+                </p>
               </div>
             </div>
 

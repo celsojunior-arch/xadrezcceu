@@ -5,7 +5,7 @@ export interface Player {
   nickname?: string;
   email?: string;
   phone?: string;
-  club?: string;
+  isActive: boolean;
   currentRating: number;
   ratingHistory: RatingEntry[];
   createdAt: string;

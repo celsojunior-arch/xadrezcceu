@@ -56,10 +56,10 @@ export const Classificacao: React.FC = () => {
 
   const getCategoryStats = () => {
     const stats = {
-      absoluto: players.filter(p => getAge(p.birthDate) >= 18).length,
-      sub18: players.filter(p => getAge(p.birthDate) >= 15 && getAge(p.birthDate) < 18).length,
-      sub15: players.filter(p => getAge(p.birthDate) >= 12 && getAge(p.birthDate) < 15).length,
-      sub12: players.filter(p => getAge(p.birthDate) < 12).length,
+      absoluto: players.filter(p => p.isActive && getAge(p.birthDate) >= 18).length,
+      sub18: players.filter(p => p.isActive && getAge(p.birthDate) >= 15 && getAge(p.birthDate) < 18).length,
+      sub15: players.filter(p => p.isActive && getAge(p.birthDate) >= 12 && getAge(p.birthDate) < 15).length,
+      sub12: players.filter(p => p.isActive && getAge(p.birthDate) < 12).length,
     };
     return stats;
   };
@@ -178,9 +178,6 @@ export const Classificacao: React.FC = () => {
                       <div className="font-bold text-black text-lg">{player.name}</div>
                       {player.nickname && (
                         <div className="text-sm font-bold text-black">"{player.nickname}"</div>
-                      )}
-                      {player.club && (
-                        <div className="text-sm font-bold text-black opacity-70">{player.club}</div>
                       )}
                     </div>
                   </td>

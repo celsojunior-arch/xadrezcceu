@@ -19,8 +19,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
     .filter(player => 
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       player.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.nickname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      player.club?.toLowerCase().includes(searchTerm.toLowerCase())
+      player.nickname?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       let comparison = 0;
@@ -51,6 +50,10 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
     if (window.confirm(`Tem certeza que deseja excluir o jogador ${player.name}?`)) {
       await deletePlayer(player.id);
     }
+  };
+
+  const handleToggleActive = async (player: Player) => {
+    await updatePlayer(player.id, { isActive: !player.isActive });
   };
 
   const getAge = (birthDate: string) => {
@@ -106,7 +109,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-600" size={20} />
               <input
                 type="text"
-                placeholder="Buscar por nome, email, apelido ou clube..."
+                placeholder="Buscar por nome, email ou apelido..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-white/80 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
@@ -145,7 +148,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                 <th className="text-left py-4 px-6 font-bold text-black">Categoria</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Idade</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Rating</th>
-                <th className="text-left py-4 px-6 font-bold text-black">Clube</th>
+                <th className="text-left py-4 px-6 font-bold text-black">Status</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Contato</th>
                 <th className="text-left py-4 px-6 font-bold text-black">Ações</th>
               </tr>
@@ -157,7 +160,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                 return (
                   <tr 
                     key={player.id} 
-                    className="hover:bg-blue-50/30 transition-colors cursor-pointer"
+                    className={`hover:bg-blue-50/30 transition-colors cursor-pointer ${
+                      !player.isActive ? 'opacity-60' : ''
+                    }`}
                     onClick={() => onPlayerSelect?.(player)}
                   >
                     <td className="py-4 px-6">
@@ -165,6 +170,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                         <div className="font-bold text-black text-lg">{player.name}</div>
                         {player.nickname && (
                           <div className="text-sm font-bold text-black">"{player.nickname}"</div>
+                        )}
+                        {!player.isActive && (
+                          <div className="text-xs font-bold text-red-600">INATIVO</div>
                         )}
                       </div>
                     </td>
@@ -191,7 +199,24 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                       )}
                     </td>
                     <td className="py-4 px-6">
-                      <div className="font-bold text-black">{player.club || '-'}</div>
+                      <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={player.isActive}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              handleToggleActive(player);
+                            }}
+                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          />
+                          <span className={`text-sm font-bold ${
+                            player.isActive ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {player.isActive ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </label>
+                      </div>
                     </td>
                     <td className="py-4 px-6">
                       <div className="font-bold text-black">{player.email || '-'}</div>

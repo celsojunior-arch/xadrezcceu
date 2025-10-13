@@ -10,7 +10,7 @@ const mockPlayers: Player[] = [
     nickname: 'João',
     email: 'joao.silva@email.com',
     phone: '(11) 99999-9999',
-    club: 'Clube de Xadrez São Paulo',
+    isActive: true,
     currentRating: 1850,
     ratingHistory: [
       {
@@ -41,7 +41,7 @@ const mockPlayers: Player[] = [
     name: 'Maria Santos',
     birthDate: '1990-07-22',
     email: 'maria.santos@email.com',
-    club: 'Clube Municipal',
+    isActive: true,
     currentRating: 1750,
     ratingHistory: [
       {
@@ -92,6 +92,7 @@ const mockPlayers: Player[] = [
     id: '4',
     name: 'Ana Oliveira',
     birthDate: '1992-05-10',
+    isActive: false,
     currentRating: 1680,
     ratingHistory: [
       {
@@ -820,7 +821,9 @@ export const useData = () => {
   };
 
   const obterRankingAtual = (): Player[] => {
-    return [...players].sort((a, b) => b.currentRating - a.currentRating);
+    return [...players]
+      .filter(player => player.isActive)
+      .sort((a, b) => b.currentRating - a.currentRating);
   };
   return {
     // State

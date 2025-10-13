@@ -17,11 +17,11 @@ export const Dashboard: React.FC = () => {
     .slice(0, 5);
 
   const ratingDistribution = {
-    '2000+': players.filter(p => p.currentRating >= 2000).length,
-    '1800-1999': players.filter(p => p.currentRating >= 1800 && p.currentRating < 2000).length,
-    '1600-1799': players.filter(p => p.currentRating >= 1600 && p.currentRating < 1800).length,
-    '1400-1599': players.filter(p => p.currentRating >= 1400 && p.currentRating < 1600).length,
-    '<1400': players.filter(p => p.currentRating < 1400).length,
+    '2000+': players.filter(p => p.isActive && p.currentRating >= 2000).length,
+    '1800-1999': players.filter(p => p.isActive && p.currentRating >= 1800 && p.currentRating < 2000).length,
+    '1600-1799': players.filter(p => p.isActive && p.currentRating >= 1600 && p.currentRating < 1800).length,
+    '1400-1599': players.filter(p => p.isActive && p.currentRating >= 1400 && p.currentRating < 1600).length,
+    '<1400': players.filter(p => p.isActive && p.currentRating < 1400).length,
   };
   return (
     <div className="space-y-6">
