@@ -314,12 +314,29 @@ export const useData = () => {
 
       if (historyError) throw historyError;
 
-      await loadPlayers();
-      
-      const newPlayer = players.find(p => p.id === playerInsert.id);
-      if (!newPlayer) throw new Error('Player not found after creation');
-      
-      return newPlayer;
+      // Return the created player data
+      return {
+        id: playerInsert.id,
+        name: playerInsert.name,
+        birthDate: playerInsert.birth_date,
+        nickname: playerInsert.nickname,
+        email: playerInsert.email,
+        phone: playerInsert.phone,
+        isActive: playerInsert.is_active,
+        currentRating: playerInsert.current_rating,
+        ratingHistory: [{
+          id: 'temp',
+          playerId: playerInsert.id,
+          previousRating: initialRating,
+          newRating: initialRating,
+          variation: 0,
+          reason: 'initial',
+          date: new Date().toISOString().split('T')[0],
+          timestamp: new Date().toISOString()
+        }],
+        createdAt: playerInsert.created_at,
+        updatedAt: playerInsert.updated_at
+      };
     } catch (error) {
       console.error('Error creating player:', error);
       throw error;

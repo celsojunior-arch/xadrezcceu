@@ -29,9 +29,10 @@ export const ImportPlayersModal: React.FC<ImportPlayersModalProps> = ({ onClose,
       const parsedData: CSVPlayerData[] = [];
       
       dataLines.forEach((line, index) => {
-        const [name, birthDate, rating, observations] = line.split(';').map(s => s.trim());
+        const parts = line.split(';').map(s => s.trim());
+        const [name, birthDate, rating, observations] = parts;
         
-        if (name && birthDate && rating) {
+        if (name && birthDate) {
           // Convert date format if needed (DD/MM/YYYY to YYYY-MM-DD)
           let formattedDate = birthDate;
           if (birthDate.includes('/')) {
@@ -39,10 +40,16 @@ export const ImportPlayersModal: React.FC<ImportPlayersModalProps> = ({ onClose,
             formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
           }
           
+          // Handle empty or invalid rating
+          let playerRating = 1500; // Default rating
+          if (rating && rating.trim() !== '' && !isNaN(parseInt(rating))) {
+            playerRating = parseInt(rating);
+          }
+          
           parsedData.push({
             name,
             birthDate: formattedDate,
-            rating: parseInt(rating) || 1500,
+            rating: playerRating,
             observations: observations || undefined
           });
         }
