@@ -737,6 +737,8 @@ export const useData = () => {
 
       if (error) throw error;
 
+      // Recarregar confrontos após inserção
+      await loadDesafioConfrontos();
     } catch (error) {
       console.error('Error generating confrontos:', error);
       throw error;
@@ -851,7 +853,6 @@ export const useData = () => {
       await gerarConfrontosDoCiclo(cicloInsert.id);
 
       await loadDesafioCiclos();
-      await loadDesafioConfrontos();
       
       const newCiclo = desafioCiclos.find(c => c.id === cicloInsert.id);
       if (!newCiclo) throw new Error('Cycle not found after creation');
