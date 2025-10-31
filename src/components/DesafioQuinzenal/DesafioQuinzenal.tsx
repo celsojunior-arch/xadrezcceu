@@ -13,9 +13,6 @@ export const DesafioQuinzenal: React.FC = () => {
     getConfrontosDoCiclo,
     getConfrontosComResultado,
     criarDesafioCiclo,
-    gerarConfrontosManualmente,
-    cancelarCiclo,
-    removerConfronto,
     lancarResultadoDesafio,
     editarResultadoDesafio,
     finalizarCicloQuinzenal,
@@ -492,7 +489,7 @@ export const DesafioQuinzenal: React.FC = () => {
       {/* Histórico */}
       {activeTab === 'historico' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="glass-card-light rounded-lg shadow-sm border border-blue-200/30">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-bold text-black">Histórico de Ciclos</h3>
             </div>
@@ -515,15 +512,25 @@ export const DesafioQuinzenal: React.FC = () => {
                             {concluidos}/{confrontosDoCiclo.length} confrontos concluídos
                           </p>
                         </div>
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          ciclo.status === 'ativo' 
-                            ? 'bg-green-50 text-green-700'
-                            : ciclo.status === 'concluido'
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'bg-gray-50 text-gray-700'
-                        }`}>
-                          {ciclo.status === 'ativo' ? 'Ativo' : 
-                           ciclo.status === 'concluido' ? 'Concluído' : 'Cancelado'}
+                        <div className="flex items-center gap-2">
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            ciclo.status === 'ativo' 
+                              ? 'bg-green-50 text-green-700'
+                              : ciclo.status === 'concluido'
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-red-50 text-red-700'
+                          }`}>
+                            {ciclo.status === 'ativo' ? 'Ativo' : 
+                             ciclo.status === 'concluido' ? 'Concluído' : 'Cancelado'}
+                          </div>
+                          {isAdmin && ciclo.status === 'ativo' && ciclo.id !== cicloAtivo?.id && (
+                            <button
+                              onClick={() => cancelarCiclo(ciclo.id)}
+                              className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded hover:bg-red-100"
+                            >
+                              Cancelar
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
