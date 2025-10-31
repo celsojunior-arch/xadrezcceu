@@ -696,6 +696,53 @@ export const useData = () => {
     setLoading(false);
   };
 
+  // Função para gerar confrontos automaticamente
+  const gerarConfrontosDoCiclo = async (cicloId: string): Promise<void> => {
+    try {
+      // Obter ranking atual de jogadores ativos
+      const jogadoresAtivos = players
+        .filter(player => player.isActive)
+        .sort((a, b) => b.currentRating - a.currentRating);
+
+      if (jogadoresAtivos.length < 2) {
+        throw new Error('Necessário pelo menos 2 jogadores ativos para gerar confrontos');
+      }
+
+      const confrontos = [];
+      
+      // Gerar confrontos: cada jogador desafia o próximo melhor classificado
+      for (let i = 1; i < jogadoresAtivos.length; i++) {
+        const desafiante = jogadoresAtivos[i]; // Pior classificado (responsável)
+        const desafiado = jogadoresAtivos[i - 1]; // Melhor classificado
+        
+        // Determinar cores (alternando para evitar sempre as mesmas cores)
+        const desafianteComBrancas = i % 2 === 1;
+        
+        confrontos.push({
+          ciclo_id: cicloId,
+          jogador_brancas_id: desafianteComBrancas ? desafiante.id : desafiado.id,
+          jogador_pretas_id: desafianteComBrancas ? desafiado.id : desafiante.id,
+          pos_brancas: desafianteComBrancas ? i + 1 : i,
+          pos_pretas: desafianteComBrancas ? i : i + 1,
+          rating_brancas_snapshot: desafianteComBrancas ? desafiante.currentRating : desafiado.currentRating,
+          rating_pretas_snapshot: desafianteComBrancas ? desafiado.currentRating : desafiante.currentRating,
+          responsavel_id: desafiante.id // Sempre o pior classificado é responsável
+        });
+      }
+
+      // Inserir confrontos no banco
+      const { error } = await supabase
+        .from('desafio_confrontos')
+        .insert(confrontos);
+
+      if (error) throw error;
+
+    } catch (error) {
+      console.error('Error generating confrontos:', error);
+      throw error;
+    }
+  };
+
   const getCicloAtivo = (): DesafioCiclo | null => {
     return desafioCiclos.find(ciclo => ciclo.status === 'ativo') || null;
   };
@@ -800,7 +847,11 @@ export const useData = () => {
 
       if (error) throw error;
 
+      // Gerar confrontos automaticamente após criar o ciclo
+      await gerarConfrontosDoCiclo(cicloInsert.id);
+
       await loadDesafioCiclos();
+      await loadDesafioConfrontos();
       
       const newCiclo = desafioCiclos.find(c => c.id === cicloInsert.id);
       if (!newCiclo) throw new Error('Cycle not found after creation');
@@ -935,6 +986,7 @@ export const useData = () => {
     calculateR1Pairings,
     validateZeroSum,
     exportRankingCSV,
-    exportTournamentStandingsCSV
+    exportTournamentStandingsCSV,
+    gerarConfrontosDoCiclo
   };
 };

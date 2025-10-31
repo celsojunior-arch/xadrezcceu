@@ -28,6 +28,9 @@ export const Classificacao: React.FC = () => {
 
   const filteredPlayers = players
     .filter(player => {
+      // Só incluir jogadores ativos na classificação
+      if (!player.isActive) return false;
+      
       const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase());
       
       if (categoryFilter === 'all') return matchesSearch;
