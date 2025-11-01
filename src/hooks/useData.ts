@@ -947,6 +947,133 @@ export const useData = () => {
     }
   };
 
+  const editarConfronto = async (confrontoId: string, dadosConfronto: {
+    jogadorBrancasId: string;
+    jogadorPretasId: string;
+  }): Promise<void> => {
+    setLoading(true);
+    
+    try {
+      const jogadorBrancas = players.find(p => p.id === dadosConfronto.jogadorBrancasId);
+      const jogadorPretas = players.find(p => p.id === dadosConfronto.jogadorPretasId);
+      
+      if (!jogadorBrancas || !jogadorPretas) {
+        throw new Error('Jogadores não encontrados');
+      }
+      
+      // Determinar posições no ranking atual
+      const rankingAtual = obterRankingAtual();
+      const posBrancas = rankingAtual.findIndex(p => p.id === dadosConfronto.jogadorBrancasId) + 1;
+      const posPretas = rankingAtual.findIndex(p => p.id === dadosConfronto.jogadorPretasId) + 1;
+      
+      // O responsável é sempre o pior classificado
+      const responsavelId = posBrancas > posPretas ? dadosConfronto.jogadorBrancasId : dadosConfronto.jogadorPretasId;
+      
+      const { error } = await supabase
+        .from('desafio_confrontos')
+        .update({
+          jogador_brancas_id: dadosConfronto.jogadorBrancasId,
+          jogador_pretas_id: dadosConfronto.jogadorPretasId,
+          pos_brancas: posBrancas,
+          pos_pretas: posPretas,
+          rating_brancas_snapshot: jogadorBrancas.currentRating,
+          rating_pretas_snapshot: jogadorPretas.currentRating,
+          responsavel_id: responsavelId,
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', confrontoId);
+
+      if (error) throw error;
+
+      await loadDesafioConfrontos();
+    } catch (error) {
+      console.error('Error editing confronto:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const excluirConfronto = async (confrontoId: string): Promise<void> => {
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase
+        .from('desafio_confrontos')
+        .delete()
+        .eq('id', confrontoId);
+
+      if (error) throw error;
+
+      await loadDesafioConfrontos();
+    } catch (error) {
+      console.error('Error deleting confronto:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const adicionarConfronto = async (cicloId: string, dadosConfronto: {
+    jogadorBrancasId: string;
+    jogadorPretasId: string;
+  }): Promise<void> => {
+    setLoading(true);
+    
+    try {
+      const jogadorBrancas = players.find(p => p.id === dadosConfronto.jogadorBrancasId);
+      const jogadorPretas = players.find(p => p.id === dadosConfronto.jogadorPretasId);
+      
+      if (!jogadorBrancas || !jogadorPretas) {
+        throw new Error('Jogadores não encontrados');
+      }
+      
+      if (dadosConfronto.jogadorBrancasId === dadosConfronto.jogadorPretasId) {
+        throw new Error('Um jogador não pode jogar contra si mesmo');
+      }
+      
+      // Verificar se já existe confronto entre esses jogadores no ciclo
+      const confrontoExistente = desafioConfrontos.find(c => 
+        c.cicloId === cicloId && 
+        ((c.jogadorBrancasId === dadosConfronto.jogadorBrancasId && c.jogadorPretasId === dadosConfronto.jogadorPretasId) ||
+         (c.jogadorBrancasId === dadosConfronto.jogadorPretasId && c.jogadorPretasId === dadosConfronto.jogadorBrancasId))
+      );
+      
+      if (confrontoExistente) {
+        throw new Error('Já existe um confronto entre esses jogadores neste ciclo');
+      }
+      
+      // Determinar posições no ranking atual
+      const rankingAtual = obterRankingAtual();
+      const posBrancas = rankingAtual.findIndex(p => p.id === dadosConfronto.jogadorBrancasId) + 1;
+      const posPretas = rankingAtual.findIndex(p => p.id === dadosConfronto.jogadorPretasId) + 1;
+      
+      // O responsável é sempre o pior classificado
+      const responsavelId = posBrancas > posPretas ? dadosConfronto.jogadorBrancasId : dadosConfronto.jogadorPretasId;
+      
+      const { error } = await supabase
+        .from('desafio_confrontos')
+        .insert({
+          ciclo_id: cicloId,
+          jogador_brancas_id: dadosConfronto.jogadorBrancasId,
+          jogador_pretas_id: dadosConfronto.jogadorPretasId,
+          pos_brancas: posBrancas,
+          pos_pretas: posPretas,
+          rating_brancas_snapshot: jogadorBrancas.currentRating,
+          rating_pretas_snapshot: jogadorPretas.currentRating,
+          responsavel_id: responsavelId
+        });
+
+      if (error) throw error;
+
+      await loadDesafioConfrontos();
+    } catch (error) {
+      console.error('Error adding confronto:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
   const obterRankingAtual = (): Player[] => {
     return [...players]
       .filter(player => player.isActive)
@@ -987,6 +1114,9 @@ export const useData = () => {
     criarDesafioCiclo,
     lancarResultadoDesafio,
     editarResultadoDesafio,
+    editarConfronto,
+    excluirConfronto,
+    adicionarConfronto,
     obterRankingAtual,
     calcularMunicipalRating,
     validateBirthDate,
