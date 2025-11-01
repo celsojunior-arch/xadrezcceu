@@ -710,23 +710,23 @@ export const useData = () => {
 
       const confrontos = [];
       
-      // Gerar confrontos: cada jogador desafia o próximo melhor classificado
-      for (let i = 1; i < jogadoresAtivos.length; i++) {
-        const desafiante = jogadoresAtivos[i]; // Pior classificado (responsável)
-        const desafiado = jogadoresAtivos[i - 1]; // Melhor classificado
+      // Gerar confrontos: 1º vs 2º, 3º vs 4º, etc.
+      for (let i = 0; i < jogadoresAtivos.length - 1; i += 2) {
+        const jogador1 = jogadoresAtivos[i]; // Melhor classificado do par
+        const jogador2 = jogadoresAtivos[i + 1]; // Pior classificado do par (responsável)
         
         // Determinar cores (alternando para evitar sempre as mesmas cores)
-        const desafianteComBrancas = i % 2 === 1;
+        const jogador1ComBrancas = (i / 2) % 2 === 0;
         
         confrontos.push({
           ciclo_id: cicloId,
-          jogador_brancas_id: desafianteComBrancas ? desafiante.id : desafiado.id,
-          jogador_pretas_id: desafianteComBrancas ? desafiado.id : desafiante.id,
-          pos_brancas: desafianteComBrancas ? i + 1 : i,
-          pos_pretas: desafianteComBrancas ? i : i + 1,
-          rating_brancas_snapshot: desafianteComBrancas ? desafiante.currentRating : desafiado.currentRating,
-          rating_pretas_snapshot: desafianteComBrancas ? desafiado.currentRating : desafiante.currentRating,
-          responsavel_id: desafiante.id // Sempre o pior classificado é responsável
+          jogador_brancas_id: jogador1ComBrancas ? jogador1.id : jogador2.id,
+          jogador_pretas_id: jogador1ComBrancas ? jogador2.id : jogador1.id,
+          pos_brancas: jogador1ComBrancas ? i + 1 : i + 2,
+          pos_pretas: jogador1ComBrancas ? i + 2 : i + 1,
+          rating_brancas_snapshot: jogador1ComBrancas ? jogador1.currentRating : jogador2.currentRating,
+          rating_pretas_snapshot: jogador1ComBrancas ? jogador2.currentRating : jogador1.currentRating,
+          responsavel_id: jogador2.id // Sempre o pior classificado do par é responsável
         });
       }
 
@@ -835,6 +835,12 @@ export const useData = () => {
       const ano = now.getFullYear();
       const dia = now.getDate();
       const quinzena = dia <= 15 ? 1 : 2;
+      
+      // Verificar se já existe um ciclo ativo
+      const cicloExistente = desafioCiclos.find(c => c.status === 'ativo');
+      if (cicloExistente) {
+        throw new Error('Já existe um ciclo ativo. Finalize o ciclo atual antes de criar um novo.');
+      }
       
       const { data: cicloInsert, error } = await supabase
         .from('desafio_ciclos')

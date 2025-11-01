@@ -52,7 +52,7 @@ export const DesafioQuinzenal: React.FC = () => {
       await criarDesafioCiclo();
     } catch (error) {
       console.error('Erro ao criar ciclo:', error);
-      alert('Erro ao criar novo ciclo quinzenal');
+      alert(error instanceof Error ? error.message : 'Erro ao criar novo ciclo quinzenal');
     }
   };
 
