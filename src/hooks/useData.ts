@@ -773,6 +773,72 @@ export const useData = () => {
     setLoading(true);
     
     try {
+      // Primeiro, aplicar as mudanças de rating para todos os confrontos com resultado
+      const confrontosDoCiclo = desafioConfrontos.filter(c => c.cicloId === cicloId && c.resultado);
+      
+      for (const confronto of confrontosDoCiclo) {
+        const jogadorBrancas = players.find(p => p.id === confronto.jogadorBrancasId);
+        const jogadorPretas = players.find(p => p.id === confronto.jogadorPretasId);
+        
+        if (!jogadorBrancas || !jogadorPretas || !confronto.resultado) continue;
+        
+        // Calcular mudanças de rating usando o sistema municipal
+        const { changeA: changeBrancas, changeB: changePretas } = calcularMunicipalRating(
+          confronto.ratingBrancasSnapshot,
+          confronto.ratingPretasSnapshot,
+          confronto.resultado
+        );
+        
+        // Aplicar mudanças de rating
+        const newRatingBrancas = Math.round(jogadorBrancas.currentRating + changeBrancas);
+        const newRatingPretas = Math.round(jogadorPretas.currentRating + changePretas);
+        
+        // Atualizar rating do jogador das brancas
+        await supabase
+          .from('players')
+          .update({ 
+            current_rating: newRatingBrancas,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', confronto.jogadorBrancasId);
+        
+        // Atualizar rating do jogador das pretas
+        await supabase
+          .from('players')
+          .update({ 
+            current_rating: newRatingPretas,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', confronto.jogadorPretasId);
+        
+        // Criar histórico de rating para jogador das brancas
+        await supabase
+          .from('rating_history')
+          .insert({
+            player_id: confronto.jogadorBrancasId,
+            previous_rating: jogadorBrancas.currentRating,
+            new_rating: newRatingBrancas,
+            variation: Math.round(changeBrancas),
+            reason: 'desafio_quinzenal',
+            desafio_confronto_id: confronto.id,
+            date: new Date().toISOString().split('T')[0]
+          });
+        
+        // Criar histórico de rating para jogador das pretas
+        await supabase
+          .from('rating_history')
+          .insert({
+            player_id: confronto.jogadorPretasId,
+            previous_rating: jogadorPretas.currentRating,
+            new_rating: newRatingPretas,
+            variation: Math.round(changePretas),
+            reason: 'desafio_quinzenal',
+            desafio_confronto_id: confronto.id,
+            date: new Date().toISOString().split('T')[0]
+          });
+      }
+      
+      // Finalizar o ciclo
       const { error } = await supabase
         .from('desafio_ciclos')
         .update({
@@ -783,7 +849,9 @@ export const useData = () => {
 
       if (error) throw error;
 
+      // Recarregar dados
       await loadDesafioCiclos();
+      await loadPlayers();
     } catch (error) {
       console.error('Error finalizing cycle:', error);
       throw error;

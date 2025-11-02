@@ -69,6 +69,24 @@ export const DesafioQuinzenal: React.FC = () => {
       alert(error instanceof Error ? error.message : 'Erro ao gerar confrontos');
     }
   };
+  
+  const handleFinalizarCiclo = async () => {
+    if (!cicloAtivo) return;
+    
+    const confirmacao = window.confirm(
+      'Tem certeza que deseja finalizar este ciclo? Esta ação aplicará as mudanças de rating e não poderá ser desfeita.'
+    );
+    
+    if (!confirmacao) return;
+    
+    try {
+      await finalizarCicloQuinzenal(cicloAtivo.id);
+      alert('Ciclo finalizado com sucesso! Os ratings foram atualizados.');
+    } catch (error) {
+      console.error('Erro ao finalizar ciclo:', error);
+      alert(error instanceof Error ? error.message : 'Erro ao finalizar ciclo');
+    }
+  };
   const handleLancarResultado = async (confrontoId: string, resultado: '1-0' | '0-1' | '0-0') => {
     try {
       await lancarResultadoDesafio(confrontoId, resultado);
@@ -204,6 +222,16 @@ export const DesafioQuinzenal: React.FC = () => {
                       </div>
                       <div className="text-sm font-bold text-black">Concluídos</div>
                     </div>
+                    {isAdmin && confrontosAtivos.length > 0 && confrontosAtivos.every(c => c.resultado) && (
+                      <button
+                        onClick={() => handleFinalizarCiclo()}
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                      >
+                        <CheckCircle size={16} />
+                        {loading ? 'Finalizando...' : 'Finalizar Ciclo'}
+                      </button>
+                    )}
                   </div>
                 </div>
 
