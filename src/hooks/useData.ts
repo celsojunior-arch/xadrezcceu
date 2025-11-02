@@ -698,6 +698,8 @@ export const useData = () => {
 
   // Função para gerar confrontos automaticamente
   const gerarConfrontosDoCiclo = async (cicloId: string): Promise<void> => {
+    setLoading(true);
+    
     try {
       // Obter ranking atual de jogadores ativos
       const jogadoresAtivos = players
@@ -730,6 +732,10 @@ export const useData = () => {
         });
       }
 
+      if (confrontos.length === 0) {
+        throw new Error('Nenhum confronto foi gerado');
+      }
+
       // Inserir confrontos no banco
       const { error } = await supabase
         .from('desafio_confrontos')
@@ -742,6 +748,8 @@ export const useData = () => {
     } catch (error) {
       console.error('Error generating confrontos:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -855,10 +863,15 @@ export const useData = () => {
 
       if (error) throw error;
 
-      // Gerar confrontos automaticamente após criar o ciclo
-      await gerarConfrontosDoCiclo(cicloInsert.id);
-
       await loadDesafioCiclos();
+      
+      // Gerar confrontos automaticamente após recarregar os dados
+      try {
+        await gerarConfrontosDoCiclo(cicloInsert.id);
+      } catch (confrontoError) {
+        console.error('Erro ao gerar confrontos:', confrontoError);
+        // Não falha a criação do ciclo se houver erro na geração de confrontos
+      }
       
       const newCiclo = desafioCiclos.find(c => c.id === cicloInsert.id);
       if (!newCiclo) throw new Error('Cycle not found after creation');
@@ -1124,6 +1137,7 @@ export const useData = () => {
     validateZeroSum,
     exportRankingCSV,
     exportTournamentStandingsCSV,
-    gerarConfrontosDoCiclo
+    gerarConfrontosDoCiclo,
+    loadDesafioConfrontos
   };
 };

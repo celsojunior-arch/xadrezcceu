@@ -16,6 +16,8 @@ export const DesafioQuinzenal: React.FC = () => {
     lancarResultadoDesafio,
     editarResultadoDesafio,
     finalizarCicloQuinzenal,
+    gerarConfrontosDoCiclo,
+    loadDesafioConfrontos,
     loading 
   } = useData();
   
@@ -56,6 +58,17 @@ export const DesafioQuinzenal: React.FC = () => {
     }
   };
 
+  const handleGerarConfrontos = async () => {
+    if (!cicloAtivo) return;
+    
+    try {
+      await gerarConfrontosDoCiclo(cicloAtivo.id);
+      await loadDesafioConfrontos();
+    } catch (error) {
+      console.error('Erro ao gerar confrontos:', error);
+      alert(error instanceof Error ? error.message : 'Erro ao gerar confrontos');
+    }
+  };
   const handleLancarResultado = async (confrontoId: string, resultado: '1-0' | '0-1' | '0-0') => {
     try {
       await lancarResultadoDesafio(confrontoId, resultado);
@@ -208,10 +221,22 @@ export const DesafioQuinzenal: React.FC = () => {
               {/* Lista de Confrontos */}
               <div className="glass-card-light rounded-lg shadow-sm border border-blue-200/30">
                 <div className="p-6 border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-black flex items-center gap-2">
-                    <Trophy size={20} />
-                    Confrontos da Quinzena
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-black flex items-center gap-2">
+                      <Trophy size={20} />
+                      Confrontos da Quinzena
+                    </h3>
+                    {isAdmin && confrontosAtivos.length === 0 && (
+                      <button
+                        onClick={handleGerarConfrontos}
+                        disabled={loading}
+                        className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        <Play size={16} />
+                        {loading ? 'Gerando...' : 'Gerar Confrontos'}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="divide-y divide-gray-200">
@@ -355,7 +380,20 @@ export const DesafioQuinzenal: React.FC = () => {
                 {confrontosAtivos.length === 0 && (
                   <div className="text-center py-12">
                     <Target size={48} className="mx-auto text-gray-400 mb-4" />
-                    <p className="font-bold text-black">Nenhum confronto gerado ainda</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum confronto gerado ainda</h3>
+                    <p className="font-bold text-black mb-4">
+                      Os confrontos são gerados automaticamente seguindo a ordem do ranking: 1º vs 2º, 3º vs 4º, etc.
+                    </p>
+                    {isAdmin && (
+                      <button
+                        onClick={handleGerarConfrontos}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                      >
+                        <Play size={20} />
+                        {loading ? 'Gerando Confrontos...' : 'Gerar Confrontos Agora'}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
