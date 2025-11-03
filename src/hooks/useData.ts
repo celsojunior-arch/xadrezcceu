@@ -984,6 +984,30 @@ export const useData = () => {
     setLoading(true);
     
     try {
+      const { error } = await supabase
+        .from('desafio_confrontos')
+        .update({
+          resultado,
+          aplicado_em: new Date().toISOString(),
+          atualizado_em: new Date().toISOString()
+        })
+        .eq('id', confrontoId);
+
+      if (error) throw error;
+
+      await loadDesafioConfrontos();
+    } catch (error) {
+      console.error('Error updating confronto result:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editarResultadoDesafio = async (confrontoId: string, novoResultado: '1-0' | '0-1' | '0-0'): Promise<void> => {
+    setLoading(true);
+    
+    try {
       // Buscar o confronto
       const confronto = desafioConfrontos.find(c => c.id === confrontoId);
       if (!confronto) {
@@ -998,88 +1022,98 @@ export const useData = () => {
         throw new Error('Jogadores não encontrados');
       }
 
-      // Calcular mudanças de rating
-      const { changeA: changeBrancas, changeB: changePretas } = calcularMunicipalRating(
-        jogadorBrancas.currentRating,
-        jogadorPretas.currentRating,
-        resultado
+      // Se já tinha resultado, reverter as mudanças anteriores
+      if (confronto.resultado) {
+        const { changeA: oldChangeBrancas, changeB: oldChangePretas } = calcularMunicipalRating(
+          confronto.ratingBrancasSnapshot,
+          confronto.ratingPretasSnapshot,
+          confronto.resultado
+        );
+        
+        // Reverter ratings
+        const revertedRatingBrancas = Math.round(jogadorBrancas.currentRating - oldChangeBrancas);
+        const revertedRatingPretas = Math.round(jogadorPretas.currentRating - oldChangePretas);
+        
+        await supabase
+          .from('players')
+          .update({ 
+            current_rating: revertedRatingBrancas,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', confronto.jogadorBrancasId);
+        
+        await supabase
+          .from('players')
+          .update({ 
+            current_rating: revertedRatingPretas,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', confronto.jogadorPretasId);
+      }
+
+      // Calcular novas mudanças de rating
+      const { changeA: newChangeBrancas, changeB: newChangePretas } = calcularMunicipalRating(
+        confronto.ratingBrancasSnapshot,
+        confronto.ratingPretasSnapshot,
+        novoResultado
       );
       
-      // Aplicar mudanças de rating
-      const newRatingBrancas = Math.round(jogadorBrancas.currentRating + changeBrancas);
-      const newRatingPretas = Math.round(jogadorPretas.currentRating + changePretas);
+      // Aplicar novas mudanças
+      const currentBrancasRating = confronto.resultado ? 
+        Math.round(jogadorBrancas.currentRating - calcularMunicipalRating(confronto.ratingBrancasSnapshot, confronto.ratingPretasSnapshot, confronto.resultado).changeA) :
+        jogadorBrancas.currentRating;
+      const currentPretasRating = confronto.resultado ?
+        Math.round(jogadorPretas.currentRating - calcularMunicipalRating(confronto.ratingBrancasSnapshot, confronto.ratingPretasSnapshot, confronto.resultado).changeB) :
+        jogadorPretas.currentRating;
+        
+      const finalRatingBrancas = Math.round(currentBrancasRating + newChangeBrancas);
+      const finalRatingPretas = Math.round(currentPretasRating + newChangePretas);
       
-      // Atualizar rating do jogador das brancas
       await supabase
         .from('players')
         .update({ 
-          current_rating: newRatingBrancas,
+          current_rating: finalRatingBrancas,
           updated_at: new Date().toISOString()
         })
         .eq('id', confronto.jogadorBrancasId);
       
-      // Atualizar rating do jogador das pretas
       await supabase
         .from('players')
         .update({ 
-          current_rating: newRatingPretas,
+          current_rating: finalRatingPretas,
           updated_at: new Date().toISOString()
         })
         .eq('id', confronto.jogadorPretasId);
-      
-      // Criar histórico de rating para jogador das brancas
+
+      // Atualizar histórico (remover antigo se existir e criar novo)
       await supabase
         .from('rating_history')
-        .insert({
-          player_id: confronto.jogadorBrancasId,
-          previous_rating: jogadorBrancas.currentRating,
-          new_rating: newRatingBrancas,
-          variation: Math.round(changeBrancas),
-          reason: 'desafio_quinzenal',
-          desafio_confronto_id: confronto.id,
-          date: new Date().toISOString().split('T')[0]
-        });
-      
-      // Criar histórico de rating para jogador das pretas
+        .delete()
+        .eq('desafio_confronto_id', confrontoId);
+        
       await supabase
         .from('rating_history')
-        .insert({
-          player_id: confronto.jogadorPretasId,
-          previous_rating: jogadorPretas.currentRating,
-          new_rating: newRatingPretas,
-          variation: Math.round(changePretas),
-          reason: 'desafio_quinzenal',
-          desafio_confronto_id: confronto.id,
-          date: new Date().toISOString().split('T')[0]
-        });
+        .insert([
+          {
+            player_id: confronto.jogadorBrancasId,
+            previous_rating: confronto.ratingBrancasSnapshot,
+            new_rating: finalRatingBrancas,
+            variation: Math.round(newChangeBrancas),
+            reason: 'desafio_quinzenal',
+            desafio_confronto_id: confronto.id,
+            date: new Date().toISOString().split('T')[0]
+          },
+          {
+            player_id: confronto.jogadorPretasId,
+            previous_rating: confronto.ratingPretasSnapshot,
+            new_rating: finalRatingPretas,
+            variation: Math.round(newChangePretas),
+            reason: 'desafio_quinzenal',
+            desafio_confronto_id: confronto.id,
+            date: new Date().toISOString().split('T')[0]
+          }
+        ]);
 
-      // Atualizar o confronto com o resultado
-      const { error } = await supabase
-        .from('desafio_confrontos')
-        .update({
-          resultado,
-          aplicado_em: new Date().toISOString(),
-          atualizado_em: new Date().toISOString()
-        })
-        .eq('id', confrontoId);
-
-      if (error) throw error;
-
-      // Recarregar dados
-      await loadDesafioConfrontos();
-      await loadPlayers();
-    } catch (error) {
-      console.error('Error updating confronto result:', error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const editarResultadoDesafio = async (confrontoId: string, novoResultado: '1-0' | '0-1' | '0-0'): Promise<void> => {
-    setLoading(true);
-    
-    try {
       const { error } = await supabase
         .from('desafio_confrontos')
         .update({
@@ -1092,6 +1126,7 @@ export const useData = () => {
       if (error) throw error;
 
       await loadDesafioConfrontos();
+      await loadPlayers();
     } catch (error) {
       console.error('Error editing confronto result:', error);
       throw error;

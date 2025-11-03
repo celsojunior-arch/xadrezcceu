@@ -201,12 +201,26 @@ export const Classificacao: React.FC = () => {
                   <td className="py-4 px-6">
                     <div className="text-2xl font-bold text-black">{player.currentRating}</div>
                     {player.ratingHistory.length > 1 && (
-                      <div className={`text-sm font-bold ${
-                        player.ratingHistory[player.ratingHistory.length - 1].variation > 0 
-                          ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {player.ratingHistory[player.ratingHistory.length - 1].variation > 0 ? '+' : ''}
-                        {player.ratingHistory[player.ratingHistory.length - 1].variation}
+                      <div className="flex items-center gap-1">
+                        {(() => {
+                          const lastEntry = player.ratingHistory[player.ratingHistory.length - 1];
+                          const variation = lastEntry.variation;
+                          const isPositive = variation > 0;
+                          const isDesafio = lastEntry.reason === 'desafio_quinzenal';
+                          
+                          return (
+                            <div className={`text-sm font-bold flex items-center gap-1 ${
+                              isPositive ? 'text-green-600' : variation < 0 ? 'text-red-600' : 'text-gray-600'
+                            }`}>
+                              {isDesafio && variation !== 0 && (
+                                <span className="text-xs">
+                                  {isPositive ? '↗️' : '↘️'}
+                                </span>
+                              )}
+                              {variation > 0 ? '+' : ''}{variation}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </td>

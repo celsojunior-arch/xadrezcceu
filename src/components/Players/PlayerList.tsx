@@ -193,8 +193,26 @@ export const PlayerList: React.FC<PlayerListProps> = ({ onPlayerSelect, onCreate
                     <td className="py-4 px-6">
                       <div className="text-2xl font-bold text-black">{player.currentRating}</div>
                       {lastRatingChange !== 0 && (
-                        <div className={`text-sm font-bold ${lastRatingChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {lastRatingChange > 0 ? '+' : ''}{lastRatingChange}
+                        <div className="flex items-center gap-1">
+                          {(() => {
+                            const lastEntry = player.ratingHistory[player.ratingHistory.length - 1];
+                            const variation = lastEntry?.variation || 0;
+                            const isPositive = variation > 0;
+                            const isDesafio = lastEntry?.reason === 'desafio_quinzenal';
+                            
+                            return (
+                              <div className={`text-sm font-bold flex items-center gap-1 ${
+                                isPositive ? 'text-green-600' : variation < 0 ? 'text-red-600' : 'text-gray-600'
+                              }`}>
+                                {isDesafio && variation !== 0 && (
+                                  <span className="text-xs">
+                                    {isPositive ? '↗️' : '↘️'}
+                                  </span>
+                                )}
+                                {variation > 0 ? '+' : ''}{variation}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </td>
