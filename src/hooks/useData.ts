@@ -984,6 +984,76 @@ export const useData = () => {
     setLoading(true);
     
     try {
+      // Buscar o confronto
+      const confronto = desafioConfrontos.find(c => c.id === confrontoId);
+      if (!confronto) {
+        throw new Error('Confronto não encontrado');
+      }
+
+      // Buscar os jogadores
+      const jogadorBrancas = players.find(p => p.id === confronto.jogadorBrancasId);
+      const jogadorPretas = players.find(p => p.id === confronto.jogadorPretasId);
+      
+      if (!jogadorBrancas || !jogadorPretas) {
+        throw new Error('Jogadores não encontrados');
+      }
+
+      // Calcular mudanças de rating
+      const { changeA: changeBrancas, changeB: changePretas } = calcularMunicipalRating(
+        jogadorBrancas.currentRating,
+        jogadorPretas.currentRating,
+        resultado
+      );
+      
+      // Aplicar mudanças de rating
+      const newRatingBrancas = Math.round(jogadorBrancas.currentRating + changeBrancas);
+      const newRatingPretas = Math.round(jogadorPretas.currentRating + changePretas);
+      
+      // Atualizar rating do jogador das brancas
+      await supabase
+        .from('players')
+        .update({ 
+          current_rating: newRatingBrancas,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', confronto.jogadorBrancasId);
+      
+      // Atualizar rating do jogador das pretas
+      await supabase
+        .from('players')
+        .update({ 
+          current_rating: newRatingPretas,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', confronto.jogadorPretasId);
+      
+      // Criar histórico de rating para jogador das brancas
+      await supabase
+        .from('rating_history')
+        .insert({
+          player_id: confronto.jogadorBrancasId,
+          previous_rating: jogadorBrancas.currentRating,
+          new_rating: newRatingBrancas,
+          variation: Math.round(changeBrancas),
+          reason: 'desafio_quinzenal',
+          desafio_confronto_id: confronto.id,
+          date: new Date().toISOString().split('T')[0]
+        });
+      
+      // Criar histórico de rating para jogador das pretas
+      await supabase
+        .from('rating_history')
+        .insert({
+          player_id: confronto.jogadorPretasId,
+          previous_rating: jogadorPretas.currentRating,
+          new_rating: newRatingPretas,
+          variation: Math.round(changePretas),
+          reason: 'desafio_quinzenal',
+          desafio_confronto_id: confronto.id,
+          date: new Date().toISOString().split('T')[0]
+        });
+
+      // Atualizar o confronto com o resultado
       const { error } = await supabase
         .from('desafio_confrontos')
         .update({
@@ -995,7 +1065,9 @@ export const useData = () => {
 
       if (error) throw error;
 
+      // Recarregar dados
       await loadDesafioConfrontos();
+      await loadPlayers();
     } catch (error) {
       console.error('Error updating confronto result:', error);
       throw error;
