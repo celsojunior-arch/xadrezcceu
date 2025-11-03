@@ -371,32 +371,36 @@ export const DesafioQuinzenal: React.FC = () => {
                 {editingConfronto && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-                      <h3 className="text-lg font-semibold mb-4">Editar Resultado</h3>
+                      <h3 className="text-lg font-semibold mb-4">Editar Resultado do Confronto</h3>
                       <p className="text-gray-600 mb-4">
-                        Selecione o novo resultado para este confronto:
+                        Selecione o novo resultado. O rating será recalculado automaticamente:
                       </p>
                       <div className="flex gap-2 mb-4">
                         <button
                           onClick={() => handleEditarResultado(editingConfronto, '1-0')}
+                          disabled={loading}
                           className="flex-1 bg-green-50 border border-green-300 text-green-700 py-2 px-3 rounded hover:bg-green-100"
                         >
-                          1-0
+                          {loading ? '...' : '1-0'}
                         </button>
                         <button
                           onClick={() => handleEditarResultado(editingConfronto, '0-0')}
+                          disabled={loading}
                           className="flex-1 bg-yellow-50 border border-yellow-300 text-yellow-700 py-2 px-3 rounded hover:bg-yellow-100"
                         >
-                          0-0
+                          {loading ? '...' : '0-0'}
                         </button>
                         <button
                           onClick={() => handleEditarResultado(editingConfronto, '0-1')}
+                          disabled={loading}
                           className="flex-1 bg-red-50 border border-red-300 text-red-700 py-2 px-3 rounded hover:bg-red-100"
                         >
-                          0-1
+                          {loading ? '...' : '0-1'}
                         </button>
                       </div>
                       <button
                         onClick={() => setEditingConfronto(null)}
+                        disabled={loading}
                         className="w-full bg-gray-100 text-gray-700 py-2 px-3 rounded hover:bg-gray-200"
                       >
                         Cancelar
